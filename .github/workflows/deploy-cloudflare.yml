@@ -1,5 +1,4 @@
 name: 🚀 Deploy cloud-mail to Cloudflare Workers
-
 on:
   push:
     branches: [ main ]
@@ -7,12 +6,10 @@ on:
       - "mail-worker/**"
       - "mail-vue/**"
   workflow_dispatch:
-
 jobs:
   Deploy-cloud-mail:
     name: 🏗️ Build and Deploy
     runs-on: ubuntu-latest
-
     env:
       NAME: ${{ secrets.NAME || vars.NAME || 'cloud-mail' }}
       CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN || vars.CUSTOM_DOMAIN }}
@@ -28,12 +25,8 @@ jobs:
       AI_MODEL: ${{ secrets.AI_MODEL || vars.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct-fast' }}
       CLOUDFLARE_EMAIL: ${{ secrets.CF_EMAIL || vars.CF_EMAIL || false }}
       ANALYSIS_CACHE: ${{ secrets.ANALYSIS_CACHE || vars.ANALYSIS_CACHE || false }}
-
-
     outputs:
       worker_url: ${{ steps.deploy.outputs.worker_url }}
-
-
     steps:
       - name: 🚚 检出代码仓库 / Checkout repository
         uses: actions/checkout@v4
@@ -50,9 +43,22 @@ jobs:
           cache: "pnpm"
           cache-dependency-path: "./mail-worker/pnpm-lock.yaml"
 
-      - name: 📦 安装依赖 / Install dependencies
+      - name: 📦 安装后端依赖 / Install dependencies
         run: pnpm install --frozen-lockfile
         working-directory: ./mail-worker
+
+      # ========== 新增前端打包部分 开始 ==========
+      - name: 📦 安装前端依赖 / Install vue dependencies
+        run: pnpm install
+        working-directory: ./mail-vue
+
+      - name: 🔨 打包前端Vue / Build Vue dist
+        run: pnpm run build
+        working-directory: ./mail-vue
+
+      - name: 📂 复制前端dist到mail-worker目录
+        run: cp -r ./mail-vue/dist ./mail-worker/
+      # ========== 新增前端打包部分 结束 ==========
 
       - name: 📡 禁用 Wrangler 遥测 / Disable wrangler telemetry
         working-directory: ./mail-worker
@@ -109,12 +115,10 @@ jobs:
           
           if [ "$(printf '%s' "$CLOUDFLARE_EMAIL" | tr '[:upper:]' '[:lower:]')" = "true" ]; then
             cat >> "$CONFIG_FILE" <<'EOF'
-
           [[send_email]]
           name = "email"
           EOF
           fi
-
           sed -i "s|\${NAME}|${NAME}|g" "$CONFIG_FILE"
           sed -i "s|\${CUSTOM_DOMAIN}|${CUSTOM_DOMAIN}|g" "$CONFIG_FILE"
           sed -i "s|\"\${DOMAIN}\"|${DOMAIN}|g" "$CONFIG_FILE"
@@ -157,7 +161,6 @@ jobs:
           if echo "$KV_LIST" | jq -e ".[] | select(.title == \"$NAME\")" >/dev/null; then
             echo "✅ Database $NAME already exists."
             KV_ID=$(echo "$KV_LIST" | jq -r ".[] | select(.title == \"$NAME\") | .id")
-            echo "KV_NAMESPACE_ID: $KV_ID"
           else
             echo "⚠️ Database $NAME does not exist. Starting creation..."
             pnpm wrangler kv namespace create $NAME
@@ -195,7 +198,6 @@ jobs:
           if echo "$DB_LIST" | jq -e ".[] | select(.name == \"$NAME\")" >/dev/null; then
             echo "✅ Database $NAME already exists."
             D1_ID=$(echo "$DB_LIST" | jq -r ".[] | select(.name == \"$NAME\") | .uuid")
-            echo "D1_DATABASE_ID: $D1_ID"
           else
             echo "⚠️ Database $NAME does not exist. Starting creation..."
             pnpm wrangler d1 create $NAME
@@ -246,7 +248,6 @@ jobs:
           
           HTTP_CODE=$(curl -sL -w "%{http_code}" -o response.txt "$WORKER_URL/api/init/${JWT_SECRET}")
           RESPONSE_BODY=$(cat response.txt)
-
           if [ "$RESPONSE_BODY" = "success" ]; then
             echo "✅ Setup completed."
           else
