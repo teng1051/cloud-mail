@@ -1,29 +1,29 @@
-name: 🚀 Deploy cloud-mail to Cloudflare Workers
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - "mail-worker/**"
-      - "mail-vue/**"
-  workflow_dispatch:
-jobs:
-  Deploy-cloud-mail:
-    name: 🏗️ Build and Deploy
-    runs-on: ubuntu-latest
-    env:
-      NAME: ${{ secrets.NAME || vars.NAME || 'cloud-mail' }}
-      CUSTOM_DOMAIN: ${{ secrets.CUSTOM_DOMAIN || vars.CUSTOM_DOMAIN }}
-      DOMAIN: ${{ secrets.DOMAIN || vars.DOMAIN }}
-      ADMIN: ${{ secrets.ADMIN || vars.ADMIN }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET }}
-      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || vars.CLOUDFLARE_API_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
-      D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID || vars.D1_DATABASE_ID }}
-      KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID || vars.KV_NAMESPACE_ID }}
-      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME || vars.R2_BUCKET_NAME }}
-      PROJECT_LINK: ${{ secrets.PROJECT_LINK || vars.PROJECT_LINK }}
-      AI_MODEL: ${{ secrets.AI_MODEL || vars.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct-fast' }}
-      CLOUDFLARE_EMAIL: ${{ secrets.CF_EMAIL || vars.CF_EMAIL || false }}
+名称：🚀 将云邮件部署到 Cloudflare Workers: 🚀 Deploy cloud-mail to Cloudflare Workers
+在：:
+  推送：:
+    分支：[ main ]: [ main ]
+    路径：:
+      - "mail-worker/**""mail-worker/**"
+      - "mail-vue/**""mail-vue/**"
+  workflow_dispatch::
+职位：:
+  部署云邮件：:
+    名称：🏗️ 构建与部署: 🏗️ Build and Deploy
+    运行环境: ubuntu-latest: ubuntu-latest
+    环境：:
+      名称: ${{ secrets.NAME || vars.NAME || 'cloud-mail' }}: ${{ secrets.NAME || vars.NAME || 'cloud-mail' }}
+      自定义域名: ${{ secrets.CUSTOM_DOMAIN || vars.CUSTOM_DOMAIN }}: ${{ secrets.CUSTOM_DOMAIN || vars.CUSTOM_DOMAIN }}
+      域名: ${{ secrets.DOMAIN || vars.DOMAIN }}: ${{ secrets.DOMAIN || vars.DOMAIN }}
+      管理员：${{ secrets.ADMIN || vars.ADMIN }}: ${{ secrets.ADMIN || vars.ADMIN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET || vars.JWT_SECRET }}: ${{ secrets.JWT_SECRET || vars.JWT_SECRET }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN || vars.CLOUDFLARE_API_TOKEN }}: ${{ secrets.CLOUDFLARE_API_TOKEN || vars.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID }}
+      D1_DATABASE_ID: ${{ secrets.D1_DATABASE_ID || vars.D1_DATABASE_ID }}: ${{ secrets.D1_DATABASE_ID || vars.D1_DATABASE_ID }}
+      KV_NAMESPACE_ID: ${{ secrets.KV_NAMESPACE_ID || vars.KV_NAMESPACE_ID }}: ${{ secrets.KV_NAMESPACE_ID || vars.KV_NAMESPACE_ID }}
+      R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME || vars.R2_BUCKET_NAME }}: ${{ secrets.R2_BUCKET_NAME || vars.R2_BUCKET_NAME }}
+      PROJECT_LINK: ${{ secrets.PROJECT_LINK || vars.PROJECT_LINK }}: ${{ secrets.PROJECT_LINK || vars.PROJECT_LINK }}
+      AI_MODEL: ${{ secrets.AI_MODEL || vars.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct-fast' }}: ${{ secrets.AI_MODEL || vars.AI_MODEL || '@cf/meta/llama-3.1-8b-instruct-fast' }}
+      CLOUDFLARE_EMAIL: ${{ secrets.CF_EMAIL || vars.CF_EMAIL || false }}: ${{ secrets.CF_EMAIL || vars.CF_EMAIL || false }}
       ANALYSIS_CACHE: ${{ secrets.ANALYSIS_CACHE || vars.ANALYSIS_CACHE || false }}
     outputs:
       worker_url: ${{ steps.deploy.outputs.worker_url }}
@@ -52,27 +52,37 @@ jobs:
         run: pnpm install
         working-directory: ./mail-vue
 
-      - name: 🔨 打包前端Vue / Build Vue dist
-        run: pnpm run build
-        working-directory: ./mail-vue
+      - name: 🔨 打包前端Vue / Build Vue distname: 🔨 打包前端Vue / Build Vue dist
+        运行：pnpm run build: pnpm run build
+        工作目录: ./mail-vue: ./mail-vue
 
-      - name: 📂 复制前端dist到mail-worker目录
-        run: cp -r ./mail-vue/dist ./mail-worker/
-      # ========== 新增前端打包部分 结束 ==========
-
-      - name: 📡 禁用 Wrangler 遥测 / Disable wrangler telemetry
-        working-directory: ./mail-worker
-        run: pnpm wrangler telemetry disable
-
-      - name: 🛠️ 设置环境 / Set up environment
-        working-directory: ./mail-worker
+      - name: 📂 检查打包产物并复制dist
         run: |
-          
-          echo "🔐 Starting environment setup..."
-          
-          if [ -z "$JWT_SECRET" ] || grep -q '[?%#/\\]' <<< "$JWT_SECRET"; then
-            echo "❌ JWT_SECRET variable is empty or contains invalid characters (?, %, #, /, \\)."
+          ls -la ./mail-vue/
+          if [ -d "./mail-vue/dist" ]; then
+            cp -r ./mail-vue/dist ./mail-worker/
+            echo "✅ 已复制 dist"
+          else
+            echo "❌ dist文件夹不存在，列出mail-vue目录内容："
+            ls -la ./mail-vue/
             exit 1
+          fi
+
+      # ========== 新增前端打包部分 结束 ==========# ========== 新增前端打包部分 结束 ==========
+
+      - 名称: 📡 禁用 Wrangler 遥测 / Disable wrangler telemetryname: 📡 禁用 Wrangler 遥测 / Disable wrangler telemetry
+        工作目录: ./mail-worker: ./mail-worker
+        运行：pnpm wrangler telemetry disable: pnpm wrangler telemetry disable
+
+      - 名称: 🛠️ 设置环境 / Set up environmentname: 🛠️ 设置环境 / Set up environment
+        工作目录: ./mail-worker: ./mail-worker
+        运行：|: |
+          
+          echo "🔐 正在启动环境设置..."
+          
+          如果 [ -z "$JWT_SECRET" ] || grep -q '[?%#/\\]' <<< "$JWT_SECRET"; then
+            echo "❌ JWT_SECRET 变量为空或包含无效字符（？、%、#、/、\）。"
+            退出 1
           fi
           
           if ! jq -e 'type == "array"' <<< "$DOMAIN" ; then
